@@ -1,0 +1,32 @@
+name: EAS Build on Push
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Expo CLI
+        run: npm install -g eas-cli
+
+      - name: Login to EAS
+        run: eas login --non-interactive
+        env:
+          EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
+
+      - name: Build for Android
+        run: eas build --platform android --profile preview --non-interactive
+
+      - name: Build for iOS
+        run: eas build --platform ios --profile preview --non-interactive
