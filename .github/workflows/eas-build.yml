@@ -12,16 +12,14 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
 
       - name: Install dependencies
-        run: npm install
+        run: bun install
 
       - name: Build Android with EAS
-        run: npx eas-cli@latest build --platform android --profile preview --non-interactive
+        run: bunx eas-cli@latest build --platform android --profile preview --non-interactive
         env:
           EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
         continue-on-error: true
