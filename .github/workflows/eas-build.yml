@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+env:
+  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
 jobs:
   build-android:
     runs-on: ubuntu-latest
@@ -20,8 +23,7 @@ jobs:
 
       - name: Build Android with EAS
         run: bunx eas-cli build --platform android --profile preview --non-interactive
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
 
 
 
