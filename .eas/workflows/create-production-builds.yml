@@ -1,0 +1,47 @@
+name: Create Production Builds
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_android:
+    name: Build Android App
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Android
+        run: npx eas-cli@latest build --platform android --profile preview
+        env:
+          EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
+
+  build_ios:
+    name: Build iOS App
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build iOS
+        run: npx eas-cli@latest build --platform ios --profile preview
+        env:
+          EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
