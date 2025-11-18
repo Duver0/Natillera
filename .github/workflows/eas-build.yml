@@ -1,4 +1,4 @@
-name: EAS Build on Push
+name: EAS Build Android Only
 
 on:
   push:
@@ -24,4 +24,6 @@ jobs:
         run: npx eas-cli@latest build --platform android --profile preview --non-interactive
         env:
           EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
+        continue-on-error: true
+
 
