@@ -84,3 +84,4 @@ Internamente los scripts llaman a `expo`, que se resuelve desde las dependencias
   bunx create-expo-app nombre-app
   ```
 
+# Updated at Tue 18 Nov 2025 06:38:40 PM -05
