@@ -5,12 +5,10 @@ on:
     branches:
       - main
 
-env:
-  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
 jobs:
   build-android:
     runs-on: ubuntu-latest
+    environment: EXPO_TOKEN
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -23,6 +21,8 @@ jobs:
 
       - name: Build Android with EAS
         run: bunx eas-cli build --platform android --profile preview --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
 
 
