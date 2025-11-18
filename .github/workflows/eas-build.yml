@@ -21,7 +21,6 @@ jobs:
       - name: Build Android with EAS
         run: bunx eas-cli@latest build --platform android --profile preview --non-interactive
         env:
-          EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
-        continue-on-error: true
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
 
