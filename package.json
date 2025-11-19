@@ -8,8 +8,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "build": "expo export -p web --output-dir public",
-    "build:vercel": "expo export -p web --output-dir public || true",
+    "build": "expo export -p web --output-dir dist && cp -r dist/* public/ && rm -rf dist",
+    "build:vercel": "expo export -p web --output-dir dist && cp -r dist/* public/ && rm -rf dist || true",
     "dev": "expo start --web"
   },
   "dependencies": {

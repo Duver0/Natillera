@@ -1,7 +1,12 @@
 import { Platform } from "react-native";
-import { openDatabaseSync } from "expo-sqlite";
 
 let db;
+let openDatabaseSync;
+
+// Solo importar expo-sqlite en mobile
+if (Platform.OS !== 'web') {
+  openDatabaseSync = require("expo-sqlite").openDatabaseSync;
+}
 
 export function getDatabase() {
   // En web no usamos SQLite

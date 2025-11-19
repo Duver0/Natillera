@@ -1,323 +1,37 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1.00001,viewport-fit=cover" />
-    
-    <title>Natillera</title>
-    
-    <!-- Favicons desde assets -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
-    <link rel="shortcut icon" href="/favicon.png" />
-    <link rel="apple-touch-icon" href="/favicon.png" />
-    
-    <!-- PWA -->
-    <meta name="theme-color" content="#1976d2" />
-    <meta name="description" content="Sistema de gestión de préstamos y ahorros" />
-    
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-      
-      html, body {
-        width: 100%;
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>natillera-app</title>
+    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      /* These styles make the body full-height */
+      html,
+      body {
         height: 100%;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+      /* These styles disable body scrolling if you are using <ScrollView> */
+      body {
+        overflow: hidden;
+      }
+      /* These styles make the root element full-height */
+      #root {
         display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-      
-      .container {
-        background: white;
-        padding: 40px;
-        border-radius: 12px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-        width: 100%;
-        max-width: 400px;
-      }
-      
-      .header {
-        text-align: center;
-        margin-bottom: 30px;
-      }
-      
-      .logo {
-        width: 80px;
-        height: 80px;
-        margin: 0 auto 15px;
-        display: block;
-      }
-      
-      h1 {
-        font-size: 28px;
-        color: #333;
-        margin-bottom: 8px;
-      }
-      
-      .subtitle {
-        font-size: 14px;
-        color: #999;
-      }
-      
-      .form-group {
-        margin-bottom: 20px;
-      }
-      
-      label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-        color: #333;
-        font-size: 14px;
-      }
-      
-      input {
-        width: 100%;
-        padding: 12px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 14px;
-        transition: border-color 0.3s;
-      }
-      
-      input:focus {
-        outline: none;
-        border-color: #667eea;
-      }
-      
-      button {
-        width: 100%;
-        padding: 12px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-weight: bold;
-        font-size: 16px;
-        cursor: pointer;
-        transition: opacity 0.3s;
-      }
-      
-      button:hover {
-        opacity: 0.9;
-      }
-      
-      button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-      
-      .error {
-        background: #fee;
-        color: #c33;
-        padding: 12px;
-        border-radius: 6px;
-        margin-bottom: 20px;
-        font-size: 14px;
-        display: none;
-      }
-      
-      .success {
-        background: #efe;
-        color: #3c3;
-        padding: 12px;
-        border-radius: 6px;
-        margin-bottom: 20px;
-        font-size: 14px;
-        display: none;
-      }
-      
-      .divider {
-        text-align: center;
-        margin: 25px 0;
-        font-size: 14px;
-        color: #999;
-      }
-      
-      .download-link {
-        display: block;
-        text-align: center;
-        padding: 12px;
-        background: #f5f5f5;
-        border-radius: 6px;
-        text-decoration: none;
-        color: #667eea;
-        font-weight: 600;
-        transition: background 0.3s;
-      }
-      
-      .download-link:hover {
-        background: #efefef;
-      }
-      
-      .loader {
-        display: none;
-        text-align: center;
-        font-size: 12px;
-        color: #999;
-        margin-top: 10px;
-      }
-      
-      .spinner {
-        border: 2px solid #f3f3f3;
-        border-top: 2px solid #667eea;
-        border-radius: 50%;
-        width: 16px;
-        height: 16px;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 8px;
-      }
-      
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        height: 100%;
+        flex: 1;
       }
     </style>
-  </head>
+  <link rel="icon" href="/favicon.ico" /></head>
+
   <body>
-    <div class="container">
-      <div class="header">
-        <img src="/favicon.png" alt="Natillera" class="logo">
-        <h1>Natillera</h1>
-        <p class="subtitle">Sistema de gestión de préstamos y ahorros</p>
-      </div>
-      
-      <div class="error" id="errorMsg"></div>
-      <div class="success" id="successMsg"></div>
-      
-      <form id="loginForm">
-        <div class="form-group">
-          <label for="email">Usuario o Email</label>
-          <input 
-            type="text" 
-            id="email" 
-            name="email" 
-            placeholder="admin" 
-            required
-            autocomplete="username"
-          >
-        </div>
-        
-        <div class="form-group">
-          <label for="password">Contraseña</label>
-          <input 
-            type="password" 
-            id="password" 
-            name="password" 
-            placeholder="••••••••" 
-            required
-            autocomplete="current-password"
-          >
-        </div>
-        
-        <button type="submit" id="loginBtn">Iniciar Sesión</button>
-        
-        <div class="loader" id="loader">
-          <div class="spinner"></div>
-          <span>Verificando credenciales...</span>
-        </div>
-      </form>
-      
-      <div class="divider">o descarga la app móvil</div>
-      
-      <a href="https://expo.dev/accounts/duver_17/projects/natillera/builds/3d668e00-24fe-41d0-9fcc-fb3e51d29c42" 
-         target="_blank" 
-         rel="noopener noreferrer"
-         class="download-link">
-        📱 Descargar App Móvil
-      </a>
-    </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <script>
-      const SUPABASE_URL = 'https://arvyilhrnjogzxzffvli.supabase.co';
-      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFydnlpbGhybmpvZ3p4emZmdmxpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1MTk4NDUsImV4cCI6MjA3OTA5NTg0NX0.YgaMjWU8lSi-g9r_HQAShMfMmY6cafIlpnBhuKgwoEI';
-      
-      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      
-      const form = document.getElementById('loginForm');
-      const emailInput = document.getElementById('email');
-      const passwordInput = document.getElementById('password');
-      const loginBtn = document.getElementById('loginBtn');
-      const errorMsg = document.getElementById('errorMsg');
-      const successMsg = document.getElementById('successMsg');
-      const loader = document.getElementById('loader');
-      
-      function showError(message) {
-        errorMsg.textContent = message;
-        errorMsg.style.display = 'block';
-        successMsg.style.display = 'none';
-      }
-      
-      function showSuccess(message) {
-        successMsg.textContent = message;
-        successMsg.style.display = 'block';
-        errorMsg.style.display = 'none';
-      }
-      
-      function hideMessages() {
-        errorMsg.style.display = 'none';
-        successMsg.style.display = 'none';
-      }
-      
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const email = emailInput.value.trim();
-        const password = passwordInput.value;
-        
-        loginBtn.disabled = true;
-        loader.style.display = 'block';
-        hideMessages();
-        
-        try {
-          // Buscar usuario en la tabla app_users por email
-          const { data: user, error: userError } = await supabase
-            .from('app_users')
-            .select('id, email, password, name')
-            .eq('email', email)
-            .single();
-          
-          if (userError || !user) {
-            throw new Error('Usuario o contraseña inválidos');
-          }
-          
-          // Verificar contraseña
-          if (user.password !== password) {
-            throw new Error('Usuario o contraseña inválidos');
-          }
-          
-          // Guardar sesión en localStorage
-          const userData = {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            loginTime: new Date().toISOString()
-          };
-          
-          localStorage.setItem('natillera_user', JSON.stringify(userData));
-          
-          showSuccess('¡Sesión iniciada correctamente! Redirigiendo...');
-          
-          // Redirigir al dashboard
-          setTimeout(() => {
-            window.location.href = '/dashboard.html';
-          }, 1500);
-          
-        } catch (error) {
-          showError(error.message || 'Error al iniciar sesión');
-          loginBtn.disabled = false;
-          loader.style.display = 'none';
-        }
-      });
-    </script>
-  </body>
+    <!-- Use static rendering with Expo Router to support running without JavaScript. -->
+    <noscript>
+      You need to enable JavaScript to run this app.
+    </noscript>
+    <!-- The root element for your Expo app. -->
+    <div id="root"></div>
+  <script src="/_expo/static/js/web/AppEntry-a34bb48fa6847b5be16d4b49e2762722.js" defer></script>
+</body>
 </html>
