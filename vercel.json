@@ -1,23 +1,5 @@
 {
-  "buildCommand": "npm run build:vercel",
+  "buildCommand": "npm install",
   "outputDirectory": "public",
-  "cleanUrls": true,
-  "framework": null,
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        }
-      ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
+  "framework": null
 }
