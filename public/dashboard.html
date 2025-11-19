@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1.00001,viewport-fit=cover" />
+    
+    <title>Natillera - Dashboard</title>
+    
+    <!-- Favicons desde assets -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
+    <link rel="shortcut icon" href="/favicon.png" />
+    
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      html, body {
+        width: 100%;
+        height: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background: #f5f5f5;
+      }
+      
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      
+      header {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .header-content {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+      
+      .logo {
+        width: 50px;
+        height: 50px;
+      }
+      
+      .header-text h1 {
+        font-size: 24px;
+        color: #333;
+        margin-bottom: 4px;
+      }
+      
+      .header-text p {
+        font-size: 14px;
+        color: #999;
+      }
+      
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+      
+      .user-name {
+        font-size: 14px;
+        color: #333;
+      }
+      
+      .logout-btn {
+        padding: 10px 20px;
+        background: #e74c3c;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.3s;
+      }
+      
+      .logout-btn:hover {
+        background: #c0392b;
+      }
+      
+      .dashboard {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+      }
+      
+      .card {
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      
+      .card h3 {
+        color: #333;
+        margin-bottom: 15px;
+        font-size: 18px;
+      }
+      
+      .card-content {
+        color: #666;
+        line-height: 1.6;
+        font-size: 14px;
+      }
+      
+      .stat {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      
+      .stat:last-child {
+        border-bottom: none;
+      }
+      
+      .stat-label {
+        color: #999;
+      }
+      
+      .stat-value {
+        font-weight: 600;
+        color: #333;
+      }
+      
+      .info-box {
+        background: #f0f7ff;
+        border-left: 4px solid #667eea;
+        padding: 15px;
+        border-radius: 4px;
+        margin-top: 20px;
+        font-size: 13px;
+        color: #333;
+        line-height: 1.5;
+      }
+      
+      .error {
+        background: #fee;
+        color: #c33;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+      }
+      
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #999;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="header-content">
+          <img src="/favicon.png" alt="Natillera" class="logo">
+          <div class="header-text">
+            <h1>Natillera</h1>
+            <p>Sistema de gestión de préstamos y ahorros</p>
+          </div>
+        </div>
+        
+        <div class="user-info">
+          <div>
+            <div class="user-name" id="userName">Cargando...</div>
+          </div>
+          <button class="logout-btn" id="logoutBtn">Cerrar Sesión</button>
+        </div>
+      </header>
+      
+      <div id="errorBox" class="error" style="display: none;"></div>
+      
+      <div id="loading" class="loading">
+        <p>Cargando datos...</p>
+      </div>
+      
+      <div id="dashboardContent" class="dashboard" style="display: none;">
+        <div class="card">
+          <h3>👤 Mi Perfil</h3>
+          <div class="card-content">
+            <div class="stat">
+              <span class="stat-label">Nombre:</span>
+              <span class="stat-value" id="profileName">-</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Email:</span>
+              <span class="stat-value" id="profileEmail">-</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Tipo:</span>
+              <span class="stat-value" id="profileType">Administrador</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <h3>💰 Mis Clientes</h3>
+          <div class="card-content">
+            <div class="stat">
+              <span class="stat-label">Total de clientes:</span>
+              <span class="stat-value" id="clientCount">0</span>
+            </div>
+            <div class="info-box">
+              Para crear nuevos clientes y gestionar préstamos y ahorros, descarga la app móvil desde el enlace de descarga.
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <h3>📱 Aplicación Móvil</h3>
+          <div class="card-content">
+            <p>Accede a todas las funcionalidades en tu dispositivo móvil:</p>
+            <ul style="margin-top: 10px; margin-left: 20px;">
+              <li>Gestión de clientes</li>
+              <li>Control de préstamos</li>
+              <li>Administración de ahorros</li>
+              <li>Reportes y estadísticas</li>
+            </ul>
+            <a href="https://expo.dev/accounts/duver_17/projects/natillera/builds/3d668e00-24fe-41d0-9fcc-fb3e51d29c42" 
+               target="_blank" 
+               style="display: inline-block; margin-top: 15px; padding: 10px 20px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">
+              Descargar App
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+      const SUPABASE_URL = 'https://arvyilhrnjogzxzffvli.supabase.co';
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFydnlpbGhybmpvZ3p4emZmdmxpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1MTk4NDUsImV4cCI6MjA3OTA5NTg0NX0.YgaMjWU8lSi-g9r_HQAShMfMmY6cafIlpnBhuKgwoEI';
+      
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      
+      const userNameEl = document.getElementById('userName');
+      const profileNameEl = document.getElementById('profileName');
+      const profileEmailEl = document.getElementById('profileEmail');
+      const clientCountEl = document.getElementById('clientCount');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const loading = document.getElementById('loading');
+      const dashboardContent = document.getElementById('dashboardContent');
+      const errorBox = document.getElementById('errorBox');
+      
+      function showError(message) {
+        errorBox.textContent = message;
+        errorBox.style.display = 'block';
+      }
+      
+      function loadUser() {
+        try {
+          const storedUser = localStorage.getItem('natillera_user');
+          if (!storedUser) {
+            window.location.href = '/';
+            return;
+          }
+          
+          const user = JSON.parse(storedUser);
+          userNameEl.textContent = user.name || user.email;
+          profileNameEl.textContent = user.name || '-';
+          profileEmailEl.textContent = user.email || '-';
+          
+          return user;
+        } catch (error) {
+          showError('Error al cargar la sesión. Por favor inicia sesión de nuevo.');
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 2000);
+        }
+      }
+      
+      async function loadDashboardData(user) {
+        try {
+          // Cargar conteo de clientes
+          const { data: clients, error } = await supabase
+            .from('clients')
+            .select('id', { count: 'exact' });
+          
+          if (!error && clients) {
+            clientCountEl.textContent = clients.length;
+          }
+          
+          loading.style.display = 'none';
+          dashboardContent.style.display = 'grid';
+          
+        } catch (error) {
+          console.error('Error cargando datos:', error);
+          loading.style.display = 'none';
+          dashboardContent.style.display = 'grid';
+        }
+      }
+      
+      logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('natillera_user');
+        window.location.href = '/';
+      });
+      
+      // Inicializar
+      window.addEventListener('DOMContentLoaded', () => {
+        const user = loadUser();
+        if (user) {
+          loadDashboardData(user);
+        }
+      });
+    </script>
+  </body>
+</html>
