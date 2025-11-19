@@ -30,7 +30,7 @@
       "package": "com.duver_17.natillera"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/icon.png"
     },
     "plugins": [
       "expo-sqlite",
@@ -39,7 +39,9 @@
     "extra": {
       "eas": {
         "projectId": "8567d69e-c59e-411a-aa2b-69e2e6d7daaa"
-      }
+      },
+      "supabaseUrl": "https://arvyilhrnjogzxzffvli.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFydnlpbGhybmpvZ3p4emZmdmxpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1MTk4NDUsImV4cCI6MjA3OTA5NTg0NX0.YgaMjWU8lSi-g9r_HQAShMfMmY6cafIlpnBhuKgwoEI"
     },
     "owner": "duver_17"
   }

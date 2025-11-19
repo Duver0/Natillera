@@ -7,8 +7,10 @@ import {
   TextInput,
   FlatList,
   Modal,
-  Alert
+  Alert,
+  Platform
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import {
@@ -31,7 +33,11 @@ export default function ClientSavingsScreen() {
   const [account, setAccount] = useState(null);
   const [movements, setMovements] = useState([]);
   const [interestRate, setInterestRate] = useState("1");
+  const [interestType, setInterestType] = useState("PERCENTAGE");
+  const [fixedInterestAmount, setFixedInterestAmount] = useState("");
   const [amount, setAmount] = useState("");
+  const [movementDate, setMovementDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const [liquidationModalVisible, setLiquidationModalVisible] =
     useState(false);
@@ -74,25 +80,35 @@ export default function ClientSavingsScreen() {
     if (!account) return;
     const value = Number(amount.replace(/[^\d]/g, ""));
     if (!value || value <= 0) return;
-    const today = new Date().toISOString().slice(0, 10);
     try {
       await addSavingsMovement({
         accountId: account.id,
         type,
         amount: value,
-        date: today
+        date: movementDate.toISOString().slice(0, 10)
       });
       setAmount("");
+      setMovementDate(new Date());
       await loadData();
     } catch (error) {
       console.error("Error registrando movimiento de ahorro", error);
     }
   }
 
+  function handleDateChange(event, selectedDate) {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setMovementDate(selectedDate);
+    }
+  }
+
   async function handleLiquidate() {
     if (!account) return;
     try {
-      const result = await calculateLiquidation(account, movements);
+      const customInterest = interestType === "FIXED_AMOUNT" 
+        ? Number(fixedInterestAmount.replace(/[^\d]/g, "")) || 0
+        : null;
+      const result = await calculateLiquidation(account, movements, customInterest);
       setLiquidationResult(result);
       setLiquidationModalVisible(true);
     } catch (error) {
@@ -158,55 +174,30 @@ export default function ClientSavingsScreen() {
         <Text style={styles.title}>Ahorro de {clientName}</Text>
       </View>
 
-      {account && (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Configuración</Text>
-          <Text style={styles.label}>Tasa de interés mensual (%)</Text>
-          <View style={styles.rateRow}>
-            <TextInput
-              style={styles.input}
-              keyboardType="numeric"
-              value={interestRate}
-              onChangeText={setInterestRate}
-            />
-            <TouchableOpacity
-              style={styles.saveRateButton}
-              onPress={handleSaveRate}
-            >
-              <Text style={styles.saveRateText}>Guardar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.deleteAccountButton}
-              onPress={() =>
-                Alert.alert(
-                  "Eliminar ahorro",
-                  "¿Deseas eliminar esta cuenta de ahorro y todos sus movimientos?",
-                  [
-                    { text: "Cancelar", style: "cancel" },
-                    {
-                      text: "Eliminar",
-                      style: "destructive",
-                      onPress: async () => {
-                        try {
-                          await deleteSavingsAccount(account.id);
-                          navigation.goBack();
-                        } catch (error) {
-                          console.error("Error eliminando cuenta de ahorro", error);
-                        }
-                      }
-                    }
-                  ]
-                )
-              }
-            >
-              <Ionicons name="trash" size={18} color="#d32f2f" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Nuevo movimiento</Text>
+        <Text style={styles.label}>Fecha</Text>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Ionicons name="calendar" size={20} color="#1976d2" />
+          <Text style={styles.dateText}>
+            {movementDate.toLocaleDateString('es-CO', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}
+          </Text>
+        </TouchableOpacity>
+        {showDatePicker && (
+          <DateTimePicker
+            value={movementDate}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={handleDateChange}
+          />
+        )}
         <Text style={styles.label}>Monto</Text>
         <TextInput
           style={styles.input}
@@ -265,6 +256,84 @@ export default function ClientSavingsScreen() {
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Liquidación de ahorro</Text>
+            
+            <Text style={styles.label}>Tipo de interés</Text>
+            <View style={styles.segment}>
+              <TouchableOpacity
+                style={[
+                  styles.segmentButton,
+                  interestType === "PERCENTAGE" && styles.segmentButtonActive
+                ]}
+                onPress={() => setInterestType("PERCENTAGE")}
+              >
+                <Text
+                  style={[
+                    styles.segmentText,
+                    interestType === "PERCENTAGE" && styles.segmentTextActive
+                  ]}
+                >
+                  Porcentaje
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.segmentButton,
+                  interestType === "FIXED_AMOUNT" && styles.segmentButtonActive
+                ]}
+                onPress={() => setInterestType("FIXED_AMOUNT")}
+              >
+                <Text
+                  style={[
+                    styles.segmentText,
+                    interestType === "FIXED_AMOUNT" && styles.segmentTextActive
+                  ]}
+                >
+                  Monto fijo
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {interestType === "PERCENTAGE" ? (
+              <>
+                <Text style={styles.label}>Tasa de interés (%)</Text>
+                <View style={styles.rateRowModal}>
+                  <TextInput
+                    style={styles.inputModal}
+                    keyboardType="numeric"
+                    value={interestRate}
+                    onChangeText={setInterestRate}
+                  />
+                  <TouchableOpacity
+                    style={styles.saveRateButtonModal}
+                    onPress={async () => {
+                      await handleSaveRate();
+                      await handleLiquidate();
+                    }}
+                  >
+                    <Text style={styles.saveRateText}>Recalcular</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : (
+              <>
+                <Text style={styles.label}>Monto de interés</Text>
+                <View style={styles.rateRowModal}>
+                  <TextInput
+                    style={styles.inputModal}
+                    keyboardType="numeric"
+                    value={fixedInterestAmount}
+                    onChangeText={(text) => setFixedInterestAmount(formatCurrencyInput(text))}
+                    placeholder="Ej: $ 50.000"
+                  />
+                  <TouchableOpacity
+                    style={styles.saveRateButtonModal}
+                    onPress={handleLiquidate}
+                  >
+                    <Text style={styles.saveRateText}>Recalcular</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
             {liquidationResult && (
               <>
                 <Text style={styles.modalLine}>
@@ -510,5 +579,73 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
     fontWeight: "600"
+  },
+  rateRowModal: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12
+  },
+  inputModal: {
+    flex: 1,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: "#ddd"
+  },
+  saveRateButtonModal: {
+    marginLeft: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: "#1976d2"
+  },
+  saveRateText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600"
+  },
+  segment: {
+    flexDirection: "row",
+    marginBottom: 12,
+    marginTop: 4
+  },
+  segmentButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#1976d2",
+    alignItems: "center",
+    marginRight: 4
+  },
+  segmentButtonActive: {
+    backgroundColor: "#1976d2"
+  },
+  segmentText: {
+    color: "#1976d2",
+    fontSize: 13
+  },
+  segmentTextActive: {
+    color: "#fff",
+    fontWeight: "600"
+  },
+  dateButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    marginBottom: 8
+  },
+  dateText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: "#333"
   }
 });

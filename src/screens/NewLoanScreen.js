@@ -10,6 +10,7 @@ import {
   Platform,
   ScrollView
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons";
@@ -29,10 +30,9 @@ export default function NewLoanScreen() {
   const [clientId, setClientId] = useState(preselectedClientId);
   const [principal, setPrincipal] = useState("");
   const [interestRate, setInterestRate] = useState("2");
-  const [interestType, setInterestType] = useState("SIMPLE");
-  const [startDate, setStartDate] = useState(
-    new Date().toISOString().slice(0, 10)
-  );
+  const [interestType] = useState("FIXED");
+  const [startDate, setStartDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export default function NewLoanScreen() {
         // La frecuencia ya no se usa en el flujo de negocio,
         // pero seguimos guardando un valor por compatibilidad.
         chargeFrequency: "MONTHLY",
-        startDate
+        startDate: startDate.toISOString().slice(0, 10)
       });
       navigation.replace("LoanDetail", { loanId: loan.id });
     } catch (error) {
@@ -86,6 +86,13 @@ export default function NewLoanScreen() {
   function handlePrincipalChange(text) {
     const formatted = formatCurrencyInput(text);
     setPrincipal(formatted);
+  }
+
+  function handleDateChange(event, selectedDate) {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setStartDate(selectedDate);
+    }
   }
 
   return (
@@ -127,7 +134,7 @@ export default function NewLoanScreen() {
           placeholder="Ej: $ 1.000.000"
         />
 
-        <Text style={styles.label}>Tasa de interés anual (%)</Text>
+        <Text style={styles.label}>Tasa de interés Fija</Text>
         <TextInput
           style={styles.input}
           keyboardType="numeric"
@@ -136,48 +143,28 @@ export default function NewLoanScreen() {
           placeholder="Ej: 24"
         />
 
-        <Text style={styles.label}>Tipo de interés</Text>
-        <View style={styles.segment}>
-          <TouchableOpacity
-            style={[
-              styles.segmentButton,
-              interestType === "SIMPLE" && styles.segmentButtonActive
-            ]}
-            onPress={() => setInterestType("SIMPLE")}
-          >
-            <Text
-              style={[
-                styles.segmentText,
-                interestType === "SIMPLE" && styles.segmentTextActive
-              ]}
-            >
-              Variable
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.segmentButton,
-              interestType === "FIXED" && styles.segmentButtonActive
-            ]}
-            onPress={() => setInterestType("FIXED")}
-          >
-            <Text
-              style={[
-                styles.segmentText,
-                interestType === "FIXED" && styles.segmentTextActive
-              ]}
-            >
-              Fijo
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <Text style={styles.label}>Fecha de inicio (AAAA-MM-DD)</Text>
-        <TextInput
-          style={styles.input}
-          value={startDate}
-          onChangeText={setStartDate}
-        />
+        <Text style={styles.label}>Fecha de inicio</Text>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Ionicons name="calendar" size={20} color="#1976d2" />
+          <Text style={styles.dateText}>
+            {startDate.toLocaleDateString('es-CO', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}
+          </Text>
+        </TouchableOpacity>
+        {showDatePicker && (
+          <DateTimePicker
+            value={startDate}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={handleDateChange}
+          />
+        )}
 
         <View style={styles.buttonContainer}>
           <Button
@@ -254,5 +241,20 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     marginTop: 16
+  },
+  dateButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: "#ddd"
+  },
+  dateText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: "#333"
   }
 });

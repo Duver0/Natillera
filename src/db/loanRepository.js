@@ -1,7 +1,29 @@
+import { Platform } from "react-native";
 import { executeSql } from "./database";
+import { supabase } from "./supabaseClient";
 
 // Calcula el interés global pendiente de un préstamo.
 export async function getRemainingInterestForLoan(loanId) {
+  if (Platform.OS === 'web') {
+    const { data, error } = await supabase
+      .from('loan_installments')
+      .select('amount_interest, paid_interest')
+      .eq('loan_id', loanId)
+      .eq('deleted', 0);
+    
+    if (error) throw error;
+    
+    let totalInterest = 0;
+    let totalPaidInterest = 0;
+    
+    (data || []).forEach(row => {
+      totalInterest += Number(row.amount_interest) || 0;
+      totalPaidInterest += Number(row.paid_interest) || 0;
+    });
+    
+    return Math.max(totalInterest - totalPaidInterest, 0);
+  }
+
   const result = await executeSql(
     `SELECT
        COALESCE(SUM(amount_interest), 0) AS total_interest,
@@ -25,6 +47,30 @@ export async function payInterestForLoan(loanId, amount, paidDate) {
 
   let remaining = value;
   const when = paidDate || new Date().toISOString().slice(0, 10);
+
+  if (Platform.OS === 'web') {
+    const { data: installments } = await supabase
+      .from('loan_installments')
+      .select('id, amount_interest, paid_interest')
+      .eq('loan_id', loanId)
+      .eq('deleted', 0)
+      .order('due_date', { ascending: true })
+      .order('number', { ascending: true });
+    
+    for (const inst of installments || []) {
+      if (remaining <= 0) break;
+      const baseInterest = Number(inst.amount_interest) || 0;
+      const prevPaidInterest =
+        inst.paid_interest != null ? Number(inst.paid_interest) : 0;
+      const remainingInterestInst = Math.max(baseInterest - prevPaidInterest, 0);
+      if (remainingInterestInst <= 0) continue;
+
+      const toPay = Math.min(remaining, remainingInterestInst);
+      await markInstallmentPaid(inst.id, when, toPay, "INTEREST");
+      remaining -= toPay;
+    }
+    return;
+  }
 
   const result = await executeSql(
     `SELECT id, amount_interest, paid_interest
@@ -50,6 +96,51 @@ export async function payInterestForLoan(loanId, amount, paidDate) {
 }
 
 export async function getLoansByOwner(ownerId) {
+  if (Platform.OS === 'web') {
+    let query = supabase
+      .from('loans')
+      .select(`
+        *,
+        clients!inner(id, name, owner_id, deleted),
+        loan_installments(id, amount_capital, amount_interest, paid, paid_amount, deleted)
+      `)
+      .eq('deleted', 0)
+      .eq('clients.deleted', 0)
+      .order('created_at', { ascending: false });
+    
+    if (ownerId !== null) {
+      query = query.eq('clients.owner_id', ownerId);
+    }
+    
+    const { data, error } = await query;
+    if (error) throw error;
+    
+    return (data || []).map(loan => {
+      const installments = loan.loan_installments || [];
+      let totalScheduled = 0;
+      let totalPaid = 0;
+      
+      installments.forEach(inst => {
+        if (inst.deleted === 0) {
+          const scheduled = (Number(inst.amount_capital) || 0) + (Number(inst.amount_interest) || 0);
+          totalScheduled += scheduled;
+          
+          if (inst.paid_amount != null) {
+            totalPaid += Number(inst.paid_amount) || 0;
+          } else if (inst.paid === 1) {
+            totalPaid += scheduled;
+          }
+        }
+      });
+      
+      return {
+        ...loan,
+        client_name: loan.clients.name,
+        remaining_amount: Math.max(totalScheduled - totalPaid, 0)
+      };
+    });
+  }
+
   const result = await executeSql(
     `SELECT
        l.*,
@@ -102,6 +193,53 @@ export async function createLoanWithInstallments({
   startDate
 }) {
   const createdAt = new Date().toISOString();
+
+  if (Platform.OS === 'web') {
+    const { data: loan, error: loanError } = await supabase
+      .from('loans')
+      .insert({
+        client_id: clientId,
+        principal,
+        term_months: 1,
+        interest_rate: interestRate,
+        interest_type: interestType,
+        charge_frequency: chargeFrequency,
+        start_date: startDate,
+        status: 'ACTIVE'
+      })
+      .select()
+      .single();
+    
+    if (loanError) throw loanError;
+    
+    const loanId = loan.id;
+    const principalNum = Number(principal) || 0;
+    const rateNum = Number(interestRate) || 0;
+    
+    let totalInterest = 0;
+    if (interestType === "FIXED") {
+      totalInterest = principalNum * (rateNum / 100);
+    } else {
+      totalInterest = principalNum * (rateNum / 100);
+    }
+    
+    const dueDate = startDate || new Date().toISOString().slice(0, 10);
+    
+    const { error: installmentError } = await supabase
+      .from('loan_installments')
+      .insert({
+        loan_id: loanId,
+        number: 1,
+        due_date: dueDate,
+        amount_capital: principalNum,
+        amount_interest: totalInterest,
+        paid: 0
+      });
+    
+    if (installmentError) throw installmentError;
+    
+    return getLoanById(loanId);
+  }
 
   const insertLoanResult = await executeSql(
     `INSERT INTO loans (client_id, principal, term_months, interest_rate, interest_type, charge_frequency, start_date, status, created_at, updated_at, pending_sync)
@@ -259,6 +397,23 @@ function round2(value) {
 }
 
 export async function getLoanById(loanId) {
+  if (Platform.OS === 'web') {
+    const { data, error } = await supabase
+      .from('loans')
+      .select('*, clients!inner(name)')
+      .eq('id', loanId)
+      .eq('deleted', 0)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') throw error;
+    if (!data) return null;
+    
+    return {
+      ...data,
+      client_name: data.clients.name
+    };
+  }
+
   const result = await executeSql(
     `SELECT l.*, c.name as client_name
      FROM loans l
@@ -272,6 +427,18 @@ export async function getLoanById(loanId) {
 }
 
 export async function getInstallmentsByLoan(loanId) {
+  if (Platform.OS === 'web') {
+    const { data, error } = await supabase
+      .from('loan_installments')
+      .select('*')
+      .eq('loan_id', loanId)
+      .eq('deleted', 0)
+      .order('number', { ascending: true });
+    
+    if (error) throw error;
+    return data || [];
+  }
+
   const result = await executeSql(
     `SELECT *
      FROM loan_installments
@@ -284,6 +451,36 @@ export async function getInstallmentsByLoan(loanId) {
 }
 
 export async function getPaidInstallmentsByOwner(ownerId) {
+  if (Platform.OS === 'web') {
+    let query = supabase
+      .from('loan_installments')
+      .select(`
+        *,
+        loans!inner(client_id, principal, interest_rate, interest_type, clients!inner(name, owner_id, deleted))
+      `)
+      .eq('paid', 1)
+      .eq('deleted', 0)
+      .eq('loans.clients.deleted', 0)
+      .order('paid_date', { ascending: false })
+      .order('due_date', { ascending: false });
+    
+    if (ownerId !== null) {
+      query = query.eq('loans.clients.owner_id', ownerId);
+    }
+    
+    const { data, error } = await query;
+    if (error) throw error;
+    
+    return (data || []).map(inst => ({
+      ...inst,
+      client_id: inst.loans.client_id,
+      principal: inst.loans.principal,
+      interest_rate: inst.loans.interest_rate,
+      interest_type: inst.loans.interest_type,
+      client_name: inst.loans.clients.name
+    }));
+  }
+
   const result = await executeSql(
     `SELECT li.*, l.client_id, l.principal, l.interest_rate, l.interest_type,
             c.name as client_name
@@ -302,6 +499,34 @@ export async function getPaidInstallmentsByOwner(ownerId) {
 }
 
 export async function getPendingInstallmentsByOwner(ownerId) {
+  if (Platform.OS === 'web') {
+    let query = supabase
+      .from('loan_installments')
+      .select(`
+        *,
+        loans!inner(client_id, principal, clients!inner(name, owner_id, deleted))
+      `)
+      .eq('paid', 0)
+      .eq('deleted', 0)
+      .eq('loans.clients.deleted', 0)
+      .order('due_date', { ascending: true })
+      .order('number', { ascending: true });
+    
+    if (ownerId !== null) {
+      query = query.eq('loans.clients.owner_id', ownerId);
+    }
+    
+    const { data, error } = await query;
+    if (error) throw error;
+    
+    return (data || []).map(inst => ({
+      ...inst,
+      client_id: inst.loans.client_id,
+      principal: inst.loans.principal,
+      client_name: inst.loans.clients.name
+    }));
+  }
+
   const result = await executeSql(
     `SELECT li.*, l.client_id, l.principal,
             c.name as client_name
@@ -320,6 +545,20 @@ export async function getPendingInstallmentsByOwner(ownerId) {
 }
 
 export async function getPendingInstallmentsByLoan(loanId) {
+  if (Platform.OS === 'web') {
+    const { data, error } = await supabase
+      .from('loan_installments')
+      .select('*')
+      .eq('loan_id', loanId)
+      .eq('deleted', 0)
+      .eq('paid', 0)
+      .order('due_date', { ascending: true })
+      .order('number', { ascending: true });
+    
+    if (error) throw error;
+    return data || [];
+  }
+
   const result = await executeSql(
     `SELECT *
      FROM loan_installments
@@ -341,6 +580,163 @@ export async function markInstallmentPaid(
   const valueRaw = amount != null ? Number(amount) : null;
 
   if (!valueRaw || valueRaw <= 0) {
+    return;
+  }
+
+  // Versión simplificada para web
+  if (Platform.OS === 'web') {
+    console.log('markInstallmentPaid - web version', { installmentId, paidDate, amount, target });
+    
+    const { data: inst, error: instError } = await supabase
+      .from('loan_installments')
+      .select('*')
+      .eq('id', installmentId)
+      .single();
+    
+    if (instError) {
+      console.error('Error fetching installment:', instError);
+      throw instError;
+    }
+    if (!inst) {
+      console.error('Installment not found');
+      return;
+    }
+    
+    console.log('Found installment:', inst);
+    
+    const baseCapital = Number(inst.amount_capital) || 0;
+    const baseInterest = Number(inst.amount_interest) || 0;
+    const prevPaidAmount = inst.paid_amount != null ? Number(inst.paid_amount) : 0;
+    const prevPaidCapital = inst.paid_capital != null ? Number(inst.paid_capital) : 0;
+    const prevPaidInterest = inst.paid_interest != null ? Number(inst.paid_interest) : 0;
+    
+    console.log('Payment amounts:', {
+      baseCapital,
+      baseInterest,
+      prevPaidCapital,
+      prevPaidInterest,
+      prevPaidAmount
+    });
+    
+    const remainingCapital = Math.max(baseCapital - prevPaidCapital, 0);
+    const remainingInterest = Math.max(baseInterest - prevPaidInterest, 0);
+    const remainingTotal = remainingCapital + remainingInterest;
+    
+    console.log('Remaining amounts:', {
+      remainingCapital,
+      remainingInterest,
+      remainingTotal,
+      payment: valueRaw,
+      target
+    });
+    
+    if (remainingTotal <= 0) {
+      console.log('No remaining amount to pay');
+      return;
+    }
+    
+    const payment = Math.min(valueRaw, remainingTotal);
+    let addCapital = 0;
+    let addInterest = 0;
+    
+    if (target === "CAPITAL") {
+      addCapital = Math.min(payment, remainingCapital);
+    } else if (target === "INTEREST") {
+      addInterest = Math.min(payment, remainingInterest);
+    } else {
+      const toInterest = Math.min(payment, remainingInterest);
+      const toCapital = Math.min(payment - toInterest, remainingCapital);
+      addInterest = toInterest;
+      addCapital = toCapital;
+    }
+    
+    console.log('Payment distribution:', {
+      addCapital,
+      addInterest,
+      totalPayment: payment
+    });
+    
+    const newPaidCapital = prevPaidCapital + addCapital;
+    const newPaidInterest = prevPaidInterest + addInterest;
+    const newPaidAmount = prevPaidAmount + payment;
+    
+    const fullyPaid = 
+      newPaidCapital >= baseCapital - 0.01 &&
+      newPaidInterest >= baseInterest - 0.01;
+    
+    console.log('Updating installment with:', {
+      fullyPaid,
+      paid_date: when,
+      paid_amount: newPaidAmount,
+      paid_capital: newPaidCapital,
+      paid_interest: newPaidInterest
+    });
+    
+    const { error: updateError } = await supabase
+      .from('loan_installments')
+      .update({
+        paid: fullyPaid ? 1 : 0,
+        paid_date: when,
+        paid_amount: newPaidAmount,
+        paid_capital: newPaidCapital,
+        paid_interest: newPaidInterest,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', installmentId);
+    
+    if (updateError) {
+      console.error('Error updating installment:', updateError);
+      throw updateError;
+    }
+    
+    console.log('Installment updated successfully');
+    
+    // Verificar si el préstamo está totalmente pagado
+    const { data: allInst } = await supabase
+      .from('loan_installments')
+      .select('id, amount_capital, amount_interest, paid, paid_amount')
+      .eq('loan_id', inst.loan_id)
+      .eq('deleted', 0);
+    
+    let scheduledTotal = 0;
+    let paidTotal = 0;
+    
+    (allInst || []).forEach(i => {
+      const base = (Number(i.amount_capital) || 0) + (Number(i.amount_interest) || 0);
+      scheduledTotal += base;
+      let paidAmt = 0;
+      if (i.paid_amount != null) {
+        paidAmt = Number(i.paid_amount) || 0;
+      } else if (i.paid === 1) {
+        paidAmt = base;
+      }
+      paidTotal += paidAmt;
+    });
+    
+    if (paidTotal + 0.01 >= scheduledTotal) {
+      const today = new Date().toISOString().slice(0, 10);
+      
+      await supabase
+        .from('loan_installments')
+        .update({
+          paid: 1,
+          paid_date: today,
+          updated_at: new Date().toISOString()
+        })
+        .eq('loan_id', inst.loan_id)
+        .eq('deleted', 0)
+        .eq('paid', 0);
+      
+      await supabase
+        .from('loans')
+        .update({
+          status: 'PAID',
+          closed_at: today,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', inst.loan_id);
+    }
+    
     return;
   }
 
@@ -528,6 +924,25 @@ export async function markInstallmentPaid(
 }
 
 export async function deleteLoan(loanId) {
+  if (Platform.OS === 'web') {
+    const now = new Date().toISOString();
+    
+    const { error: loanError } = await supabase
+      .from('loans')
+      .update({ deleted: 1, updated_at: now })
+      .eq('id', loanId);
+    
+    if (loanError) throw loanError;
+    
+    const { error: installmentError } = await supabase
+      .from('loan_installments')
+      .update({ deleted: 1, updated_at: now })
+      .eq('loan_id', loanId);
+    
+    if (installmentError) throw installmentError;
+    return;
+  }
+
   await executeSql(
     `UPDATE loans
      SET deleted = 1,
@@ -548,6 +963,45 @@ export async function deleteLoan(loanId) {
 }
 
 export async function deletePayment(installmentId) {
+  if (Platform.OS === 'web') {
+    const now = new Date().toISOString();
+    
+    // Obtener el loan_id primero
+    const { data: installment } = await supabase
+      .from('loan_installments')
+      .select('loan_id')
+      .eq('id', installmentId)
+      .single();
+    
+    const { error: installmentError } = await supabase
+      .from('loan_installments')
+      .update({
+        paid: 0,
+        paid_date: null,
+        paid_amount: null,
+        paid_capital: null,
+        paid_interest: null,
+        updated_at: now
+      })
+      .eq('id', installmentId);
+    
+    if (installmentError) throw installmentError;
+    
+    if (installment) {
+      const { error: loanError } = await supabase
+        .from('loans')
+        .update({
+          status: 'ACTIVE',
+          closed_at: null,
+          updated_at: now
+        })
+        .eq('id', installment.loan_id);
+      
+      if (loanError) throw loanError;
+    }
+    return;
+  }
+
   await executeSql(
     `UPDATE loan_installments
      SET paid = 0,

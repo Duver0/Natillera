@@ -416,7 +416,7 @@ export default function LoanDetailScreen() {
   }
 
   const interestTypeLabel =
-    loan.interest_type === "FIXED" ? "Fijo" : "Variable";
+    "Fijo";
   const interestLabel = `${loan.interest_rate}% ${interestTypeLabel}`;
 
   const hasValidPaymentAmount =

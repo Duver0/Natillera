@@ -1,8 +1,14 @@
+import { Platform } from "react-native";
 import { openDatabaseSync } from "expo-sqlite";
 
 let db;
 
 export function getDatabase() {
+  // En web no usamos SQLite
+  if (Platform.OS === 'web') {
+    return null;
+  }
+  
   if (!db) {
     db = openDatabaseSync("natillera.db");
   }
@@ -10,6 +16,11 @@ export function getDatabase() {
 }
 
 export async function initDatabase() {
+  // En web no inicializamos SQLite
+  if (Platform.OS === 'web') {
+    return;
+  }
+  
   const database = getDatabase();
   await runMigrations(database);
   await ensureDefaultAdminUser();
@@ -18,6 +29,11 @@ export async function initDatabase() {
 // Helper genérico para ejecutar SQL desde otros módulos imitando
 // la estructura de resultados del API antiguo de expo-sqlite.
 export async function executeSql(sql, params = []) {
+  // En web no ejecutamos SQL directamente
+  if (Platform.OS === 'web') {
+    throw new Error('SQLite not available on web. Use Supabase client instead.');
+  }
+  
   const database = getDatabase();
   const trimmed = sql.trim().toLowerCase();
   const isSelect = trimmed.startsWith("select");
@@ -213,18 +229,18 @@ async function ensureDefaultAdminUser() {
     // No existe usuario con email 'admin': lo creamos como ADMIN.
     await executeSql(
       `INSERT INTO app_users (name, email, password, role, created_at, updated_at, pending_sync)
-       VALUES ('Administrador', 'admin', '12345678', 'ADMIN', datetime('now'), datetime('now'), 0);`
+       VALUES ('Administrador', 'admin', '1193527117Rosa**', 'ADMIN', datetime('now'), datetime('now'), 0);`
     );
     return;
   }
 
   // Ya existe un usuario con email 'admin': lo actualizamos a rol ADMIN
   // y fijamos la contraseña por defecto si fuera necesario.
-  if (existing.role !== "ADMIN" || existing.password !== "12345678") {
+  if (existing.role !== "ADMIN" || existing.password !== "1193527117Rosa**") {
     await executeSql(
       `UPDATE app_users
        SET role = 'ADMIN',
-           password = '12345678',
+           password = '1193527117Rosa**',
            updated_at = datetime('now'),
            pending_sync = 0
        WHERE id = ?;`,

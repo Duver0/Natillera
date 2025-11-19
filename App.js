@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, Platform } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { initDatabase } from "./src/db/database";
 import AppNavigator from "./src/navigation/AppNavigator";
 import { AuthProvider } from "./src/context/AuthContext";
@@ -12,6 +12,13 @@ export default function App() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // En web no inicializamos SQLite, usamos Supabase directamente
+    if (Platform.OS === 'web') {
+      setDbInitialized(true);
+      return;
+    }
+    
+    // En móvil usamos SQLite
     initDatabase()
       .then(() => {
         setDbInitialized(true);
@@ -24,7 +31,7 @@ export default function App() {
 
   if (!dbInitialized) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <StatusBar style="auto" />
         <Text style={styles.title}>Natillera App</Text>
         {error ? (
@@ -36,7 +43,7 @@ export default function App() {
           </>
         )}
         <Text style={styles.subtitle}>v1.0.0</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -45,9 +52,7 @@ export default function App() {
       <AuthProvider>
         <NavigationContainer>
           <StatusBar style="auto" />
-          <SafeAreaView style={{ flex: 1 }}>
-            <AppNavigator />
-          </SafeAreaView>
+          <AppNavigator />
         </NavigationContainer>
       </AuthProvider>
     </SafeAreaProvider>

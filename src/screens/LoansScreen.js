@@ -79,7 +79,7 @@ export default function LoansScreen() {
 
   function renderLoanItem(item) {
     const interestTypeLabel =
-      item.interest_type === "FIXED" ? "Fijo" : "Variable";
+      "Fijo";
     const interestLabel = `${item.interest_rate}% ${interestTypeLabel}`;
     const remaining =
       item.remaining_amount != null ? Number(item.remaining_amount) : 0;

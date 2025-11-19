@@ -195,49 +195,51 @@ export default function ClientsScreen() {
             <Text style={styles.clientStatText}>
               Ahorros: {stats.savingsDepositsCount}
             </Text>
-            {isAdmin && (
-              <View style={styles.clientActionsIcons}>
-                <TouchableOpacity
-                  style={styles.clientIconButton}
-                  onPress={() => openEditClientModal(item)}
-                >
-                  <Ionicons name="pencil" size={16} color="#1976d2" />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.clientIconButton}
-                  onPress={() => handleDeleteClient(item)}
-                >
-                  <Ionicons name="trash" size={16} color="#d32f2f" />
-                </TouchableOpacity>
-              </View>
-            )}
           </View>
         </View>
 
         <View style={styles.clientActionsRow}>
-          <TouchableOpacity
-            style={styles.clientLoanButton}
-            onPress={() =>
-              navigation.navigate("NewLoan", {
-                clientId: item.id
-              })
-            }
-          >
-            <Ionicons name="cash" size={16} color="#1976d2" />
-            <Text style={styles.clientLoanText}>Nuevo préstamo</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.clientSavingsButton}
-            onPress={() =>
-              navigation.navigate("ClientSavings", {
-                clientId: item.id,
-                clientName: item.name
-              })
-            }
-          >
-            <Ionicons name="wallet" size={16} color="#388e3c" />
-            <Text style={styles.clientSavingsText}>Ahorro</Text>
-          </TouchableOpacity>
+          <View style={styles.leftActions}>
+            <TouchableOpacity
+              style={styles.clientSavingsButton}
+              onPress={() =>
+                navigation.navigate("ClientSavings", {
+                  clientId: item.id,
+                  clientName: item.name
+                })
+              }
+            >
+              <Ionicons name="wallet" size={16} color="#388e3c" />
+              <Text style={styles.clientSavingsText}>Ahorro</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.clientLoanButton}
+              onPress={() =>
+                navigation.navigate("NewLoan", {
+                  clientId: item.id
+                })
+              }
+            >
+              <Ionicons name="cash" size={16} color="#1976d2" />
+              <Text style={styles.clientLoanText}>Préstamo</Text>
+            </TouchableOpacity>
+          </View>
+          {isAdmin && (
+            <View style={styles.rightActions}>
+              <TouchableOpacity
+                style={styles.clientIconButton}
+                onPress={() => openEditClientModal(item)}
+              >
+                <Ionicons name="pencil" size={20} color="#1976d2" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.clientIconButton}
+                onPress={() => handleDeleteClient(item)}
+              >
+                <Ionicons name="trash" size={20} color="#d32f2f" />
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </View>
     );
@@ -463,22 +465,28 @@ const styles = StyleSheet.create({
     color: "#555",
     marginTop: 2
   },
-  clientActionsIcons: {
-    flexDirection: "row",
-    marginTop: 4
-  },
   clientIconButton: {
-    paddingHorizontal: 4,
+    paddingHorizontal: 6,
     paddingVertical: 2
   },
   clientActionsRow: {
     flexDirection: "row",
-    marginTop: 6
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 8
+  },
+  leftActions: {
+    flexDirection: "row",
+    alignItems: "center"
+  },
+  rightActions: {
+    flexDirection: "row",
+    alignItems: "center"
   },
   clientLoanButton: {
     flexDirection: "row",
     alignItems: "center",
-    marginRight: 12
+    marginLeft: 12
   },
   clientLoanText: {
     marginLeft: 4,
@@ -488,8 +496,7 @@ const styles = StyleSheet.create({
   },
   clientSavingsButton: {
     flexDirection: "row",
-    alignItems: "center",
-    marginTop: 4
+    alignItems: "center"
   },
   clientSavingsText: {
     marginLeft: 4,

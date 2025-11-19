@@ -9,7 +9,8 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  ScrollView
+  ScrollView,
+  Image
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 
@@ -50,6 +51,11 @@ export default function LoginScreen() {
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
+        <Image
+          source={require("../../assets/icon.png")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
         <Text style={styles.title}>Natillera</Text>
         <Text style={styles.subtitle}>Iniciar sesión</Text>
 
@@ -79,9 +85,7 @@ export default function LoginScreen() {
         </View>
 
         <Text style={styles.info}>
-          Usuario administrador por defecto: <Text style={styles.bold}>admin</Text>{" "}
-          / <Text style={styles.bold}>12345678</Text>. Solo el administrador puede
-          crear otros usuarios.
+          Ingresa con tu usuario y contraseña para continuar.
         </Text>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -95,6 +99,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 24,
     backgroundColor: "#f5f5f5"
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    alignSelf: "center",
+    marginBottom: 16
   },
   title: {
     fontSize: 26,
