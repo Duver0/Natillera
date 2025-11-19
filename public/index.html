@@ -279,9 +279,9 @@
         hideMessages();
         
         try {
-          // Buscar usuario en la tabla users por email
+          // Buscar usuario en la tabla app_users por email
           const { data: user, error: userError } = await supabase
-            .from('users')
+            .from('app_users')
             .select('id, email, password, name')
             .eq('email', email)
             .single();
