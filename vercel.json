@@ -1,13 +1,5 @@
 {
-  "buildCommand": "bun install",
-  "outputDirectory": ".",
-  "devCommand": "node server.js",
-  "cleanUrls": true,
   "framework": null,
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/server.js"
-    }
-  ]
+  "buildCommand": "",
+  "outputDirectory": "public"
 }
