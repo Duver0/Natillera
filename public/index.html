@@ -32,6 +32,15 @@
         height: 100%;
         width: 100%;
       }
+      
+      .loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        font-size: 18px;
+        color: #666;
+      }
     </style>
   </head>
   <body>
@@ -43,10 +52,32 @@
       </div>
     </noscript>
     
-    <div id="root"></div>
+    <div id="root" class="loading">Cargando Natillera...</div>
     
-    <script src="https://cdn.jsdelivr.net/npm/react@19.1.0/umd/react.production.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/react-dom@19.1.0/umd/react-dom.production.min.js"></script>
-    <script type="module" src="/index.js"></script>
+    <script>
+      // Redirigir a una página de información temporal
+      document.addEventListener('DOMContentLoaded', function() {
+        const root = document.getElementById('root');
+        root.innerHTML = `
+          <div style="padding: 40px; max-width: 600px; margin: auto; text-align: center;">
+            <img src="/favicon.png" alt="Natillera" style="width: 80px; height: 80px; margin-bottom: 20px;">
+            <h1>Natillera</h1>
+            <p style="font-size: 16px; color: #666; line-height: 1.6;">
+              Sistema de gestión de préstamos y ahorros
+            </p>
+            <p style="font-size: 14px; color: #999; margin-top: 40px;">
+              La aplicación web está en desarrollo. 
+            </p>
+            <p style="font-size: 14px; color: #999;">
+              Por favor, descargá la app móvil en tu dispositivo.
+            </p>
+            <a href="https://expo.dev/@duver_17/natillera" 
+               style="display: inline-block; margin-top: 30px; padding: 12px 30px; background: #3498db; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">
+              Descargar App
+            </a>
+          </div>
+        `;
+      });
+    </script>
   </body>
 </html>
