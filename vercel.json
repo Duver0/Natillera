@@ -1,13 +1,13 @@
 {
-  "buildCommand": "npx expo export -p web",
-  "outputDirectory": "dist",
-  "devCommand": "npx expo start --web",
+  "buildCommand": "bun install",
+  "outputDirectory": ".",
+  "devCommand": "node server.js",
   "cleanUrls": true,
   "framework": null,
-  "rewrites": [
+  "routes": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "/(.*)",
+      "dest": "/server.js"
     }
   ]
 }
