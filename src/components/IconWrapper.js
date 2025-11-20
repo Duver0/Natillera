@@ -64,4 +64,3 @@ export default function IconWrapper({ name, size = 24, color = "#000", style }) 
 
   return <Ionicons name={name} size={size} color={color} style={style} />;
 }
-}
