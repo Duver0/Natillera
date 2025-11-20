@@ -1,11 +1,11 @@
 import React from "react";
-import { Platform, Text } from "react-native";
+import { Platform, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 // Mapeo de iconos a emojis para web
 const iconEmojis = {
   "log-out": "🚪",
-  "person-add": "👤➕",
+  "person-add": "👤",
   "person-add-outline": "👤",
   "people": "👥",
   "pencil": "✏️",
@@ -31,24 +31,34 @@ export default function IconWrapper({ name, size = 24, color = "#000", style }) 
   
   if (isWeb) {
     const emoji = iconEmojis[name] || "•";
+    const fontSize = typeof size === 'number' ? size * 1.2 : 24 * 1.2;
+    
     return (
-      <Text
+      <View
         style={[
           {
-            fontSize: size * 0.9,
-            color: color,
-            lineHeight: size,
-            height: size,
             width: size,
-            textAlign: 'center',
-            textAlignVertical: 'center',
-            marginHorizontal: 2,
+            height: size,
+            justifyContent: 'center',
+            alignItems: 'center',
+            overflow: 'visible',
           },
           style,
         ]}
       >
-        {emoji}
-      </Text>
+        <Text
+          style={{
+            fontSize: fontSize,
+            color: color,
+            lineHeight: fontSize,
+            textAlign: 'center',
+            includeFontPadding: false,
+            textAlignVertical: 'center',
+          }}
+        >
+          {emoji}
+        </Text>
+      </View>
     );
   }
 
