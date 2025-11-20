@@ -11,6 +11,7 @@ import {
 import { useNavigation, useIsFocused } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import IconWrapper from "../components/IconWrapper";
+import ConfirmDialog from "../components/ConfirmDialog";
 import PendingInstallmentsList from "../components/PendingInstallmentsList";
 import {
   getPendingInstallmentsByOwner,
@@ -36,6 +37,10 @@ export default function DashboardScreen() {
   const [editEmail, setEditEmail] = React.useState("");
   const [editRole, setEditRole] = React.useState("USER");
   const [editPassword, setEditPassword] = React.useState("");
+  const [confirmDialogVisible, setConfirmDialogVisible] = React.useState(false);
+  const [pendingAction, setPendingAction] = React.useState(null);
+  const [confirmMessage, setConfirmMessage] = React.useState("");
+  const [confirmTitle, setConfirmTitle] = React.useState("");
 
   const isFocused = useIsFocused();
 
@@ -76,6 +81,26 @@ export default function DashboardScreen() {
 
   function handleGoToClients() {
     navigation.navigate("Clientes");
+  }
+
+  function showConfirm(title, message, onConfirm, destructive = false) {
+    setConfirmTitle(title);
+    setConfirmMessage(message);
+    setPendingAction(() => onConfirm);
+    setConfirmDialogVisible(true);
+  }
+
+  function handleConfirmDialog() {
+    if (pendingAction) {
+      pendingAction();
+    }
+    setConfirmDialogVisible(false);
+    setPendingAction(null);
+  }
+
+  function handleCancelDialog() {
+    setConfirmDialogVisible(false);
+    setPendingAction(null);
   }
 
   function handleOpenLoan(item) {
@@ -210,25 +235,20 @@ export default function DashboardScreen() {
         return;
       }
 
-      Alert.alert(
+      showConfirm(
         "Confirmar pago",
         "El pago se aplicará a los intereses pendientes del préstamo (posiblemente en varias cuotas). ¿Deseas continuar?",
-        [
-          { text: "Cancelar", style: "cancel" },
-          {
-            text: "Pagar",
-            style: "destructive",
-            onPress: async () => {
-              try {
-                await payInterestForLoan(loanId, amountGlobal, null);
-                closePaymentModal();
-                await loadPending();
-              } catch (error) {
-                console.error("Error registrando pago de intereses", error);
-              }
-            }
+        async () => {
+          try {
+            await payInterestForLoan(loanId, amountGlobal, null);
+            closePaymentModal();
+            await loadPending();
+          } catch (error) {
+            console.error("Error registrando pago de intereses", error);
+            Alert.alert("Error", "No se pudo registrar el pago");
           }
-        ]
+        },
+        true
       );
       return;
     }
@@ -263,27 +283,21 @@ export default function DashboardScreen() {
         "¿Deseas registrar este pago de todas formas?";
     }
 
-    Alert.alert("Confirmar pago", message, [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Pagar",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await markInstallmentPaid(
-              selectedInstallment.id,
-              null,
-              amountNum,
-              paymentTarget
-            );
-            closePaymentModal();
-            await loadPending();
-          } catch (error) {
-            console.error("Error registrando pago", error);
-          }
-        }
+    showConfirm("Confirmar pago", message, async () => {
+      try {
+        await markInstallmentPaid(
+          selectedInstallment.id,
+          null,
+          amountNum,
+          paymentTarget
+        );
+        closePaymentModal();
+        await loadPending();
+      } catch (error) {
+        console.error("Error registrando pago", error);
+        Alert.alert("Error", "No se pudo registrar el pago");
       }
-    ]);
+    }, true);
   }
 
   function openEditUserModal(userToEdit) {

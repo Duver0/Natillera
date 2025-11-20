@@ -22,6 +22,7 @@ import {
 } from "../db/loanRepository";
 import { formatCurrency, formatCurrencyInput } from "../utils/currency";
 import PendingInstallmentsList from "../components/PendingInstallmentsList";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 export default function LoanDetailScreen() {
   const navigation = useNavigation();
@@ -38,6 +39,10 @@ export default function LoanDetailScreen() {
   const [selectedInstallment, setSelectedInstallment] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentTarget, setPaymentTarget] = useState("CAPITAL"); // CAPITAL | INTEREST
+  const [confirmDialogVisible, setConfirmDialogVisible] = useState(false);
+  const [confirmTitle, setConfirmTitle] = useState("");
+  const [confirmMessage, setConfirmMessage] = useState("");
+  const [pendingAction, setPendingAction] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -81,6 +86,24 @@ export default function LoanDetailScreen() {
     } catch (error) {
       console.error("Error cargando detalle de préstamo", error);
     }
+  }
+
+  function showConfirm(title, message, onConfirm, destructive = false) {
+    setConfirmTitle(title);
+    setConfirmMessage(message);
+    setPendingAction(() => onConfirm);
+    setConfirmDialogVisible(true);
+  }
+
+  function handleConfirmDialog() {
+    if (pendingAction) {
+      pendingAction();
+    }
+    setConfirmDialogVisible(false);
+  }
+
+  function handleCancelDialog() {
+    setConfirmDialogVisible(false);
   }
 
   function openPaymentModal(item) {
@@ -212,25 +235,20 @@ export default function LoanDetailScreen() {
         return;
       }
 
-      Alert.alert(
+      showConfirm(
         "Confirmar pago",
         "El pago se aplicará a los intereses pendientes del préstamo (posiblemente en varias cuotas). ¿Deseas continuar?",
-        [
-          { text: "Cancelar", style: "cancel" },
-          {
-            text: "Pagar",
-            style: "destructive",
-            onPress: async () => {
-              try {
-                await payInterestForLoan(loanId, amountGlobal, null);
-                closePaymentModal();
-                await loadData();
-              } catch (error) {
-                console.error("Error registrando pago de intereses", error);
-              }
-            }
+        async () => {
+          try {
+            await payInterestForLoan(loanId, amountGlobal, null);
+            closePaymentModal();
+            await loadData();
+          } catch (error) {
+            console.error("Error registrando pago de intereses", error);
+            Alert.alert("Error", "No se pudo registrar el pago");
           }
-        ]
+        },
+        true // destructive
       );
       return;
     }
@@ -265,27 +283,21 @@ export default function LoanDetailScreen() {
         "¿Deseas registrar este pago de todas formas?";
     }
 
-    Alert.alert("Confirmar pago", message, [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Pagar",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await markInstallmentPaid(
-              selectedInstallment.id,
-              null,
-              amountNum,
-              paymentTarget
-            );
-            closePaymentModal();
-            await loadData();
-          } catch (error) {
-            console.error("Error registrando pago", error);
-          }
-        }
+    showConfirm("Confirmar pago", message, async () => {
+      try {
+        await markInstallmentPaid(
+          selectedInstallment.id,
+          null,
+          amountNum,
+          paymentTarget
+        );
+        closePaymentModal();
+        await loadData();
+      } catch (error) {
+        console.error("Error registrando pago", error);
+        Alert.alert("Error", "No se pudo registrar el pago");
       }
-    ]);
+    }, true);
   }
 
   function handleDeletePayment(item) {
@@ -635,6 +647,17 @@ export default function LoanDetailScreen() {
           </View>
         </View>
       </Modal>
+
+      <ConfirmDialog
+        visible={confirmDialogVisible}
+        title={confirmTitle}
+        message={confirmMessage}
+        onConfirm={handleConfirmDialog}
+        onCancel={handleCancelDialog}
+        confirmText="Confirmar"
+        cancelText="Cancelar"
+        destructive={true}
+      />
     </View>
   );
 }
