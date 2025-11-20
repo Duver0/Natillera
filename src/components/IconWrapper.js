@@ -27,17 +27,22 @@ const iconEmojis = {
 };
 
 export default function IconWrapper({ name, size = 24, color = "#000", style }) {
-  if (Platform.OS === "web") {
+  const isWeb = Platform.OS === "web";
+  
+  if (isWeb) {
     const emoji = iconEmojis[name] || "•";
     return (
       <Text
         style={[
           {
-            fontSize: size * 0.8,
+            fontSize: size * 0.9,
             color: color,
             lineHeight: size,
             height: size,
             width: size,
+            textAlign: 'center',
+            textAlignVertical: 'center',
+            marginHorizontal: 2,
           },
           style,
         ]}
@@ -48,4 +53,5 @@ export default function IconWrapper({ name, size = 24, color = "#000", style }) 
   }
 
   return <Ionicons name={name} size={size} color={color} style={style} />;
+}
 }

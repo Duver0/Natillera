@@ -29,10 +29,14 @@ function MainTabs() {
           else if (route.name === "Prestamos") iconName = "cash";
           else if (route.name === "Pagos") iconName = "card";
           else if (route.name === "Ahorros") iconName = "wallet";
-          return <IconWrapper name={iconName} size={size} color={color} />;
+          return <IconWrapper name={iconName} size={size || 24} color={color} />;
         },
         tabBarActiveTintColor: "#1976d2",
-        tabBarInactiveTintColor: "#777"
+        tabBarInactiveTintColor: "#777",
+        tabBarStyle: {
+          backgroundColor: "#f5f5f5",
+          borderTopColor: "#ddd"
+        }
       })}
     >
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
