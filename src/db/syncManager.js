@@ -1,6 +1,14 @@
 import { Platform } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import supabase from "./supabaseClient";
+
+let AsyncStorage = null;
+if (Platform.OS !== 'web') {
+  try {
+    AsyncStorage = require("@react-native-async-storage/async-storage").default;
+  } catch (e) {
+    // AsyncStorage no disponible en web
+  }
+}
 
 const SYNC_QUEUE_KEY = "natillera_sync_queue";
 const LAST_SYNC_KEY = "natillera_last_sync";

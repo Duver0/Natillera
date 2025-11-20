@@ -3,11 +3,25 @@ import { View, Text, StyleSheet, ActivityIndicator, Platform } from "react-nativ
 import { NavigationContainer } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import NetInfo from "@react-native-community/netinfo";
 import { initDatabase } from "./src/db/database";
-import syncManager from "./src/db/syncManager";
 import AppNavigator from "./src/navigation/AppNavigator";
 import { AuthProvider } from "./src/context/AuthContext";
+
+// Importar NetInfo solo en mobile
+let NetInfo = null;
+let syncManager = null;
+if (Platform.OS !== 'web') {
+  try {
+    NetInfo = require("@react-native-community/netinfo").default;
+  } catch (e) {
+    // NetInfo no disponible en web
+  }
+  try {
+    syncManager = require("./src/db/syncManager").default;
+  } catch (e) {
+    // SyncManager no disponible en web
+  }
+}
 
 export default function App() {
   const [dbInitialized, setDbInitialized] = useState(false);
@@ -33,7 +47,7 @@ export default function App() {
 
   // Monitorear conexión a internet en mobile
   useEffect(() => {
-    if (Platform.OS === 'web') return;
+    if (Platform.OS === 'web' || !NetInfo || !syncManager) return;
 
     const unsubscribe = NetInfo.addEventListener(state => {
       const isConnected = state.isConnected && state.isInternetReachable;
