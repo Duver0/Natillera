@@ -3,7 +3,9 @@ import { View, Text, StyleSheet, ActivityIndicator, Platform } from "react-nativ
 import { NavigationContainer } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import NetInfo from "@react-native-community/netinfo";
 import { initDatabase } from "./src/db/database";
+import syncManager from "./src/db/syncManager";
 import AppNavigator from "./src/navigation/AppNavigator";
 import { AuthProvider } from "./src/context/AuthContext";
 
@@ -27,6 +29,23 @@ export default function App() {
         console.error("Error initializing database:", err);
         setError(err.message);
       });
+  }, []);
+
+  // Monitorear conexión a internet en mobile
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+
+    const unsubscribe = NetInfo.addEventListener(state => {
+      const isConnected = state.isConnected && state.isInternetReachable;
+      syncManager.setOnlineStatus(isConnected);
+      
+      if (isConnected) {
+        console.log('[App] Conexión detectada, sincronizando...');
+        syncManager.syncQueue();
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   if (!dbInitialized) {

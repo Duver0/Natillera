@@ -1,6 +1,7 @@
 import { Platform } from "react-native";
 import { executeSql } from "./database";
 import { supabase } from "./supabaseClient";
+import syncManager from "./syncManager";
 
 export async function getOrCreateSavingsAccount(clientId) {
   if (Platform.OS === 'web') {
@@ -45,6 +46,22 @@ export async function getOrCreateSavingsAccount(clientId) {
     [clientId, "Ahorro principal", 1, createdAt, createdAt]
   );
   const id = insert.insertId;
+  
+  // Agregar a cola de sincronización
+  await syncManager.addToQueue({
+    table: 'savings_accounts',
+    action: 'insert',
+    data: {
+      id,
+      client_id: clientId,
+      name: "Ahorro principal",
+      interest_rate: 1,
+      created_at: createdAt,
+      updated_at: createdAt,
+      deleted: 0
+    }
+  });
+  
   const result = await executeSql(
     `SELECT * FROM savings_accounts WHERE id = ?;`,
     [id]
@@ -81,15 +98,20 @@ export async function addSavingsMovement({
   amount,
   date
 }) {
+  const movementData = {
+    account_id: accountId,
+    type,
+    amount: Number(amount) || 0,
+    date,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    deleted: 0
+  };
+
   if (Platform.OS === 'web') {
     const { error } = await supabase
       .from('savings_movements')
-      .insert({
-        account_id: accountId,
-        type,
-        amount: Number(amount) || 0,
-        date
-      });
+      .insert(movementData);
     
     if (error) throw error;
     return;
@@ -103,6 +125,13 @@ export async function addSavingsMovement({
     VALUES (?, ?, ?, ?, ?, ?, 0, 1);`,
     [accountId, type, Number(amount) || 0, date, createdAt, createdAt]
   );
+
+  // Agregar a cola de sincronización
+  await syncManager.addToQueue({
+    table: 'savings_movements',
+    action: 'insert',
+    data: movementData
+  });
 }
 
 export async function getSavingsMovements(accountId) {

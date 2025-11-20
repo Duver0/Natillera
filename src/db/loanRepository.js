@@ -1,6 +1,7 @@
 import { Platform } from "react-native";
 import { executeSql } from "./database";
 import { supabase } from "./supabaseClient";
+import syncManager from "./syncManager";
 
 // Calcula el interés global pendiente de un préstamo.
 export async function getRemainingInterestForLoan(loanId) {
@@ -296,6 +297,44 @@ export async function createLoanWithInstallments({
       createdAt
     ]
   );
+
+  // Agregar a cola de sincronización
+  await syncManager.addToQueue({
+    table: 'loans',
+    action: 'insert',
+    data: {
+      id: loanId,
+      client_id: clientId,
+      principal,
+      term_months: 1,
+      interest_rate: interestRate,
+      interest_type: interestType,
+      charge_frequency: chargeFrequency,
+      start_date: startDate,
+      status: 'ACTIVE',
+      created_at: createdAt,
+      updated_at: createdAt
+    }
+  });
+
+  await syncManager.addToQueue({
+    table: 'loan_installments',
+    action: 'insert',
+    data: {
+      loan_id: loanId,
+      number: 1,
+      due_date: dueDate,
+      amount_capital: amountCapital,
+      amount_interest: amountInterest,
+      paid: 0,
+      paid_date: null,
+      paid_amount: null,
+      paid_capital: null,
+      paid_interest: null,
+      created_at: createdAt,
+      updated_at: createdAt
+    }
+  });
 
   return getLoanById(loanId);
 }
@@ -870,6 +909,23 @@ export async function markInstallmentPaid(
     ]
   );
 
+  // Agregar a cola de sincronización
+  await syncManager.addToQueue({
+    table: 'loan_installments',
+    action: 'update',
+    data: {
+      id: installmentId,
+      amount_capital: storedAmountCapital,
+      amount_interest: storedAmountInterest,
+      paid: fullyPaid ? 1 : 0,
+      paid_date: when,
+      paid_amount: newPaidAmount,
+      paid_capital: newPaidCapital,
+      paid_interest: newPaidInterest,
+      updated_at: new Date().toISOString()
+    }
+  });
+
   // Si estamos en la última cuota y quedó un remanente, crear una nueva cuota
   // con el saldo pendiente para permitir seguir pagando.
   if (shouldCreateExtraInstallment) {
@@ -943,6 +999,8 @@ export async function deleteLoan(loanId) {
     return;
   }
 
+  const now = new Date().toISOString();
+
   await executeSql(
     `UPDATE loans
      SET deleted = 1,
@@ -960,6 +1018,17 @@ export async function deleteLoan(loanId) {
      WHERE loan_id = ?;`,
     [loanId]
   );
+
+  // Agregar a cola de sincronización
+  await syncManager.addToQueue({
+    table: 'loans',
+    action: 'update',
+    data: {
+      id: loanId,
+      deleted: 1,
+      updated_at: now
+    }
+  });
 }
 
 export async function deletePayment(installmentId) {
