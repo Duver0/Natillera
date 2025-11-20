@@ -17,8 +17,8 @@ import {
   useRoute,
   useIsFocused
 } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
+import IconWrapper from "../components/IconWrapper";
 import {
   createClient,
   getClientsByOwner,
@@ -209,7 +209,7 @@ export default function ClientsScreen() {
                 })
               }
             >
-              <Ionicons name="wallet" size={16} color="#388e3c" />
+              <IconWrapper name="wallet" size={16} color="#388e3c" />
               <Text style={styles.clientSavingsText}>Ahorro</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -220,7 +220,7 @@ export default function ClientsScreen() {
                 })
               }
             >
-              <Ionicons name="cash" size={16} color="#1976d2" />
+              <IconWrapper name="cash" size={16} color="#1976d2" />
               <Text style={styles.clientLoanText}>Préstamo</Text>
             </TouchableOpacity>
           </View>
@@ -230,13 +230,13 @@ export default function ClientsScreen() {
                 style={styles.clientIconButton}
                 onPress={() => openEditClientModal(item)}
               >
-                <Ionicons name="pencil" size={20} color="#1976d2" />
+                <IconWrapper name="pencil" size={20} color="#1976d2" />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.clientIconButton}
                 onPress={() => handleDeleteClient(item)}
               >
-                <Ionicons name="trash" size={20} color="#d32f2f" />
+                <IconWrapper name="trash" size={20} color="#d32f2f" />
               </TouchableOpacity>
             </View>
           )}
@@ -268,7 +268,7 @@ export default function ClientsScreen() {
             style={styles.headerButton}
             onPress={() => setShowForm((prev) => !prev)}
           >
-            <Ionicons
+            <IconWrapper
               name={showForm ? "close" : "person-add"}
               size={20}
               color="#1976d2"

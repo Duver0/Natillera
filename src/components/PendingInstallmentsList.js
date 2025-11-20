@@ -6,7 +6,7 @@ import {
   FlatList,
   TouchableOpacity
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import IconWrapper from "./IconWrapper";
 import { formatCurrency } from "../utils/currency";
 
 export default function PendingInstallmentsList({
@@ -45,7 +45,7 @@ export default function PendingInstallmentsList({
             style={styles.payButton}
             onPress={() => onPressPay(item)}
           >
-            <Ionicons name="checkmark-circle" size={20} color="#fff" />
+            <IconWrapper name="checkmark-circle" size={20} color="#fff" />
             <Text style={styles.payText}>Pagar</Text>
           </TouchableOpacity>
         )}

@@ -1,7 +1,7 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Ionicons } from "@expo/vector-icons";
+import IconWrapper from "../components/IconWrapper";
 import LoginScreen from "../screens/LoginScreen";
 import DashboardScreen from "../screens/DashboardScreen";
 import ClientsScreen from "../screens/ClientsScreen";
@@ -29,7 +29,7 @@ function MainTabs() {
           else if (route.name === "Prestamos") iconName = "cash";
           else if (route.name === "Pagos") iconName = "card";
           else if (route.name === "Ahorros") iconName = "wallet";
-          return <Ionicons name={iconName} size={size} color={color} />;
+          return <IconWrapper name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: "#1976d2",
         tabBarInactiveTintColor: "#777"

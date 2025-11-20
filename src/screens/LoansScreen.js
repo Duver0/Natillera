@@ -7,8 +7,8 @@ import {
   TouchableOpacity,
   Alert
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useIsFocused } from "@react-navigation/native";
+import IconWrapper from "../components/IconWrapper";
 import { useAuth } from "../context/AuthContext";
 import { getLoansByOwner, deleteLoan } from "../db/loanRepository";
 import { formatCurrency } from "../utils/currency";
@@ -94,7 +94,7 @@ export default function LoansScreen() {
             <Text style={styles.loanId}>ID #{item.id}</Text>
           </View>
           <View style={styles.loanRow}>
-            <Ionicons name="cash" size={18} color="#1976d2" />
+            <IconWrapper name="cash" size={18} color="#1976d2" />
             <Text style={styles.loanAmount}>
               Monto: {formatCurrency(item.principal)}
             </Text>
@@ -108,7 +108,7 @@ export default function LoansScreen() {
           style={styles.deleteButton}
           onPress={() => handleDeleteLoan(item)}
         >
-          <Ionicons name="trash" size={18} color="#d32f2f" />
+          <IconWrapper name="trash" size={18} color="#d32f2f" />
         </TouchableOpacity>
       </View>
     );
@@ -133,7 +133,7 @@ export default function LoansScreen() {
           style={styles.newLoanButton}
           onPress={() => navigation.navigate("NewLoan")}
         >
-          <Ionicons name="add-circle" size={22} color="#1976d2" />
+          <IconWrapper name="add-circle" size={22} color="#1976d2" />
           <Text style={styles.newLoanText}>Nuevo</Text>
         </TouchableOpacity>
       </View>

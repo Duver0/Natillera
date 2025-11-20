@@ -9,8 +9,8 @@ import {
   Alert
 } from "react-native";
 import { useNavigation, useIsFocused } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
+import IconWrapper from "../components/IconWrapper";
 import PendingInstallmentsList from "../components/PendingInstallmentsList";
 import {
   getPendingInstallmentsByOwner,
@@ -374,7 +374,7 @@ export default function DashboardScreen() {
           </Text>
         </View>
         <TouchableOpacity style={styles.logoutIconButton} onPress={logout}>
-          <Ionicons name="log-out" size={20} color="#d32f2f" />
+          <IconWrapper name="log-out" size={20} color="#d32f2f" />
         </TouchableOpacity>
       </View>
 
@@ -383,7 +383,7 @@ export default function DashboardScreen() {
           style={[styles.actionButton, styles.primaryButton]}
           onPress={handleCreateClient}
         >
-          <Ionicons name="person-add" size={20} color="#fff" />
+          <IconWrapper name="person-add" size={20} color="#fff" />
           <Text style={styles.actionTextPrimary}>Crear cliente</Text>
         </TouchableOpacity>
 
@@ -392,7 +392,7 @@ export default function DashboardScreen() {
             style={styles.actionButton}
             onPress={handleCreateUser}
           >
-            <Ionicons name="person-add-outline" size={20} color="#1976d2" />
+            <IconWrapper name="person-add-outline" size={20} color="#1976d2" />
             <Text style={styles.actionText}>Crear usuario</Text>
           </TouchableOpacity>
         ) : (
@@ -400,7 +400,7 @@ export default function DashboardScreen() {
             style={styles.actionButton}
             onPress={handleGoToClients}
           >
-            <Ionicons name="people" size={20} color="#1976d2" />
+            <IconWrapper name="people" size={20} color="#1976d2" />
             <Text style={styles.actionText}>Ver clientes</Text>
           </TouchableOpacity>
         )}
@@ -431,13 +431,13 @@ export default function DashboardScreen() {
                   style={styles.userEditButton}
                   onPress={() => openEditUserModal(u)}
                 >
-                  <Ionicons name="pencil" size={16} color="#1976d2" />
+                  <IconWrapper name="pencil" size={16} color="#1976d2" />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.userDeleteButton}
                   onPress={() => handleDeleteUser(u)}
                 >
-                  <Ionicons name="trash" size={16} color="#d32f2f" />
+                  <IconWrapper name="trash" size={16} color="#d32f2f" />
                 </TouchableOpacity>
               </View>
             </View>
