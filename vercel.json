@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm install",
+  "buildCommand": "bun install && bun run build:vercel",
   "outputDirectory": "public",
   "framework": null
 }

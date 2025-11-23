@@ -6,6 +6,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { initDatabase } from "./src/db/database";
 import AppNavigator from "./src/navigation/AppNavigator";
 import { AuthProvider } from "./src/context/AuthContext";
+import "./global.css";
 
 // Importar NetInfo solo en mobile
 let NetInfo = null;
