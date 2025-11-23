@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  Modal,
   View,
   Text,
   TouchableOpacity,
@@ -36,55 +35,56 @@ export default function ConfirmDialog({
     return null;
   }
 
-  // En web, usar Modal personalizado
+  if (!visible || Platform.OS !== "web") {
+    return null;
+  }
+
   return (
-    <Modal
-      visible={visible && Platform.OS === "web"}
-      transparent={true}
-      animationType="fade"
-      onRequestClose={onCancel}
-    >
-      <View style={styles.backdrop}>
-        <View style={styles.dialog}>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.message}>{message}</Text>
-          <View style={styles.buttons}>
-            <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
-              onPress={onCancel}
-            >
-              <Text style={styles.cancelButtonText}>{cancelText}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
+    <View style={styles.webBackdrop}>
+      <View style={styles.dialog}>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.message}>{message}</Text>
+        <View style={styles.buttons}>
+          <TouchableOpacity
+            style={[styles.button, styles.cancelButton]}
+            onPress={onCancel}
+          >
+            <Text style={styles.cancelButtonText}>{cancelText}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.button,
+              styles.confirmButton,
+              destructive && styles.destructiveButton,
+            ]}
+            onPress={onConfirm}
+          >
+            <Text
               style={[
-                styles.button,
-                styles.confirmButton,
-                destructive && styles.destructiveButton,
+                styles.confirmButtonText,
+                destructive && styles.destructiveButtonText,
               ]}
-              onPress={onConfirm}
             >
-              <Text
-                style={[
-                  styles.confirmButtonText,
-                  destructive && styles.destructiveButtonText,
-                ]}
-              >
-                {confirmText}
-              </Text>
-            </TouchableOpacity>
-          </View>
+              {confirmText}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
-    </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
+  webBackdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 9999,
   },
   dialog: {
     backgroundColor: "#fff",
